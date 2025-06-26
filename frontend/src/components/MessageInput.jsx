@@ -8,6 +8,7 @@ const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
+  const [sending, setSending] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -28,24 +29,28 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!text.trim() && !imagePreview) return;
+const handleSendMessage = async (e) => {
+  e.preventDefault();
+  if (sending || (!text.trim() && !imagePreview)) return;
 
-    try {
-      await sendMessage({
-        text: text.trim(),
-        image: imagePreview,
-      });
+  setSending(true);
+  try {
+    await sendMessage({
+      text: text.trim(),
+      image: imagePreview,
+    });
 
-      // Clear form
-      setText("");
-      setImagePreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
-  };
+    // Clear form
+    setText("");
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  } catch (error) {
+    console.error("Failed to send message:", error);
+    toast.error("Failed to send message");
+  } finally {
+    setSending(false); // Reset sending state
+  }
+};
 
   return (
     <div className="p-4 w-full">
@@ -98,7 +103,7 @@ const MessageInput = () => {
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={sending || (!text.trim() && !imagePreview)}
         >
           <Send size={22} />
         </button>
