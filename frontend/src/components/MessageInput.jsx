@@ -79,33 +79,41 @@ const handleSendMessage = async (e) => {
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2">
-          <input
-            type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md"
-            placeholder="Type a message..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-          />
+    <form
+      onSubmit={handleSendMessage}
+      className="flex flex-col sm:flex-row items-end sm:items-center gap-2"
+    >
+      <div className="flex w-full gap-2 items-center">
+        <input
+          type="text"
+          className="flex-1 input input-bordered rounded-lg input-sm sm:input-md"
+          placeholder="Type a message..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+        
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={handleImageChange}
+        />
+      </div>
 
-          <button
-            type="button"
-            className={`hidden sm:flex btn btn-circle
-                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Image size={20} />
-          </button>
-          <EmojiPickerComponent onEmojiClick={handleEmojiClick} />
-        </div>
+      <div className="flex gap-2 self-end sm:self-auto">
+        <button
+          type="button"
+          className={`btn btn-circle btn-sm ${
+            imagePreview ? "text-emerald-500" : "text-zinc-400"
+          }`}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Image size={20} />
+        </button>
+
+        <EmojiPickerComponent onEmojiClick={handleEmojiClick} />
+
         <button
           type="submit"
           className="btn btn-sm btn-circle"
@@ -113,7 +121,9 @@ const handleSendMessage = async (e) => {
         >
           <Send size={22} />
         </button>
-      </form>
+      </div>
+    </form>
+
     </div>
   );
 };
