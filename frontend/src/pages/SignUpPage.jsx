@@ -20,7 +20,7 @@ const SignUpPage = () => {
     password: "",
   });
 
-  const { signUp, isSigningUp } = useAuthStore();
+  const { signup, isSigningUp } = useAuthStore();
 
   const validateForm = () => {
     //check one by one
@@ -56,7 +56,7 @@ const SignUpPage = () => {
     e.preventDefault();
     const success = validateForm();
     if (success) {
-      await signUp(formData);
+      await signup(formData);
     }
   };
 
