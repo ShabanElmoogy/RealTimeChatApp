@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
+import EmojiPickerComponent from "./EmojiPicker";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
@@ -52,6 +53,10 @@ const handleSendMessage = async (e) => {
   }
 };
 
+ const handleEmojiClick = (emoji) => {
+    setText(prev => prev + emoji);
+  };
+
   return (
     <div className="p-4 w-full">
       {imagePreview && (
@@ -99,6 +104,7 @@ const handleSendMessage = async (e) => {
           >
             <Image size={20} />
           </button>
+          <EmojiPickerComponent onEmojiClick={handleEmojiClick} />
         </div>
         <button
           type="submit"
