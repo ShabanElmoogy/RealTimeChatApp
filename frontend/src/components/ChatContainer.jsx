@@ -1,10 +1,11 @@
 import { useChatStore } from "../store/useChatStore";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import UnreadMessagesSeparator from "./UnreadMessagesSeparator";
+import UserInfoPanel from "./UserInfoPanel";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 import { CheckCheck, Check } from "lucide-react";
@@ -22,6 +23,7 @@ const ChatContainer = () => {
   } = useChatStore();
   
   const { authUser } = useAuthStore();
+  const [showUserInfo, setShowUserInfo] = useState(false);
   const messageEndRef = useRef(null);
   const unreadSeparatorRef = useRef(null);
   const observerRef = useRef(null);
@@ -94,19 +96,23 @@ const ChatContainer = () => {
 
   if (isMessagesLoading) {
     return (
-      <div className="flex-1 flex flex-col overflow-auto">
-        <ChatHeader />
-        <MessageSkeleton />
-        <MessageInput />
+      <div className="flex-1 flex overflow-auto">
+        <div className="flex-1 flex flex-col">
+          <ChatHeader onToggleUserInfo={() => setShowUserInfo(!showUserInfo)} showUserInfo={showUserInfo} />
+          <MessageSkeleton />
+          <MessageInput />
+        </div>
+        {showUserInfo && <UserInfoPanel onClose={() => setShowUserInfo(false)} />}
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-auto">
-      <ChatHeader />
+    <div className="flex-1 flex overflow-auto">
+      <div className="flex-1 flex flex-col">
+        <ChatHeader onToggleUserInfo={() => setShowUserInfo(!showUserInfo)} showUserInfo={showUserInfo} />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => {
           const isFirstUnreadMessage = index === getFirstUnreadMessageIndex();
           const isUnreadMessage = message.receiverId === authUser._id && !message.isRead;
@@ -179,9 +185,11 @@ const ChatContainer = () => {
             </div>
           );
         })}
-      </div>
+        </div>
 
-      <MessageInput />
+        <MessageInput />
+      </div>
+      {showUserInfo && <UserInfoPanel onClose={() => setShowUserInfo(false)} />}
     </div>
   );
 };

@@ -1,8 +1,8 @@
-import { X } from "lucide-react";
+import { X, Info } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 
-const ChatHeader = () => {
+const ChatHeader = ({ onToggleUserInfo, showUserInfo }) => {
   const { selectedUser, setSelectedUser } = useChatStore();
   const { onlineUsers } = useAuthStore();
 
@@ -27,10 +27,24 @@ const ChatHeader = () => {
           </div>
         </div>
 
-        {/* Close button */}
-        <button onClick={() => setSelectedUser(null)}>
-          <X />
-        </button>
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={onToggleUserInfo}
+            className={`btn btn-ghost btn-sm btn-circle ${showUserInfo ? 'bg-base-300' : ''}`}
+            title="User Info"
+          >
+            <Info className="w-4 h-4" />
+          </button>
+          
+          <button 
+            onClick={() => setSelectedUser(null)}
+            className="btn btn-ghost btn-sm btn-circle"
+            title="Close Chat"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
