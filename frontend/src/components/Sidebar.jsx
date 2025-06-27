@@ -17,7 +17,7 @@ const Sidebar = () => {
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesOnline = showOnlineOnly ? (user.status === "friend" && onlineUsers.includes(user._id)) : true;
+    const matchesOnline = showOnlineOnly ? onlineUsers.includes(user._id) : true;
     return matchesSearch && matchesOnline;
   });
 
