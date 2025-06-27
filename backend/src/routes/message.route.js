@@ -4,6 +4,7 @@ import {
   getUsersForSidebar,
   getMessages,
   sendMessage,
+  markMessagesAsRead,
 } from "../controllers/message.controller.js";
 
 const router = express.Router();
@@ -11,5 +12,6 @@ const router = express.Router();
 router.get("/users", protectRoute, getUsersForSidebar);
 router.get("/:id", protectRoute, getMessages);
 router.post("/send/:id", protectRoute, sendMessage);
+router.patch("/read/:id", protectRoute, markMessagesAsRead);
 
 export default router;

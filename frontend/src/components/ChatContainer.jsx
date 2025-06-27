@@ -6,6 +6,7 @@ import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
+import { CheckCheck, Check } from "lucide-react";
 
 const ChatContainer = () => {
   const {
@@ -15,17 +16,19 @@ const ChatContainer = () => {
     selectedUser,
     subscribeToMessages,
     unsubscribeFromMessages,
+    markMessagesAsRead,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
     getMessages(selectedUser._id);
+    markMessagesAsRead(selectedUser._id);
 
     subscribeToMessages();
 
     return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages, markMessagesAsRead]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -80,6 +83,15 @@ const ChatContainer = () => {
                 />
               )}
               {message.text && <p>{message.text}</p>}
+              {message.senderId === authUser._id && (
+                <div className="flex justify-end mt-1">
+                  {message.isRead ? (
+                    <CheckCheck className="w-4 h-4 text-blue-500" />
+                  ) : (
+                    <Check className="w-4 h-4 text-gray-400" />
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
