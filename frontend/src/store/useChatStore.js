@@ -56,9 +56,6 @@ export const useChatStore = create((set, get) => ({
       set({
         messages: [...get().messages, newMessage],
       });
-
-      // Auto-mark as read since user is viewing this conversation
-      get().markMessagesAsRead(selectedUser._id);
     });
 
     socket.on("messagesRead", ({ readerId }) => {
@@ -82,6 +79,25 @@ export const useChatStore = create((set, get) => ({
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
+  },
+
+  deleteAllMessages: async () => {
+    try {
+      await axiosInstance.delete("/messages/delete");
+      set({ messages: [] });
+      toast.success("All messages deleted successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to delete messages");
+    }
+  },
+
+  getFirstUnreadMessageIndex: () => {
+    const { messages } = get();
+    const { authUser } = useAuthStore.getState();
+    
+    return messages.findIndex(message => 
+      message.receiverId === authUser._id && !message.isRead
+    );
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
