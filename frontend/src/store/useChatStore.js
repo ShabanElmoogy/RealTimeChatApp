@@ -75,9 +75,24 @@ export const useChatStore = create((set, get) => ({
 
   markMessagesAsRead: async (userId) => {
     try {
+      const { authUser } = useAuthStore.getState();
+      
+      // Optimistically update local state first
+      const { messages } = get();
+      const updatedMessages = messages.map(message => 
+        message.senderId === userId && message.receiverId === authUser._id && !message.isRead
+          ? { ...message, isRead: true }
+          : message
+      );
+      set({ messages: updatedMessages });
+      
+      // Then make API call
       await axiosInstance.patch(`/messages/read/${userId}`);
     } catch (error) {
       console.error("Error marking messages as read:", error);
+      // Revert optimistic update on error
+      const res = await axiosInstance.get(`/messages/${userId}`);
+      set({ messages: res.data });
     }
   },
 

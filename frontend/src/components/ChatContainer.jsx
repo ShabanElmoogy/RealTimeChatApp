@@ -27,27 +27,19 @@ const ChatContainer = () => {
   const messageEndRef = useRef(null);
   const unreadSeparatorRef = useRef(null);
   const observerRef = useRef(null);
-  const unreadMessagesRef = useRef(new Set());
 
   // Mark messages as read when they come into view
   const handleIntersection = useCallback((entries) => {
-    const visibleUnreadMessages = entries
-      .filter(entry => entry.isIntersecting && unreadMessagesRef.current.has(entry.target.dataset.messageId))
-      .map(entry => entry.target.dataset.messageId);
+    const visibleUnreadMessages = entries.filter(entry => entry.isIntersecting);
 
     if (visibleUnreadMessages.length > 0) {
       markMessagesAsRead(selectedUser._id);
-      visibleUnreadMessages.forEach(messageId => {
-        unreadMessagesRef.current.delete(messageId);
-      });
     }
   }, [selectedUser._id, markMessagesAsRead]);
 
   useEffect(() => {
     getMessages(selectedUser._id);
-
     subscribeToMessages();
-
     return () => unsubscribeFromMessages();
   }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
@@ -73,23 +65,12 @@ const ChatContainer = () => {
     if (messages.length > 0) {
       const firstUnreadIndex = getFirstUnreadMessageIndex();
       
-      // Clean up intersection observer
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-      
       if (firstUnreadIndex !== -1 && unreadSeparatorRef.current) {
-        // Scroll to unread separator if there are unread messages
         setTimeout(() => {
           unreadSeparatorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 100);
-      } else {
-        // Clear unread tracking if no unread messages
-        unreadMessagesRef.current.clear();
-        if (messageEndRef.current) {
-          // Scroll to bottom if no unread messages
-          messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
+      } else if (messageEndRef.current) {
+        messageEndRef.current.scrollIntoView({ behavior: "smooth" });
       }
     }
   }, [messages, getFirstUnreadMessageIndex]);
@@ -114,23 +95,16 @@ const ChatContainer = () => {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => {
-          const isFirstUnreadMessage = index === getFirstUnreadMessageIndex();
+          const firstUnreadIndex = getFirstUnreadMessageIndex();
+          const isFirstUnreadMessage = index === firstUnreadIndex && firstUnreadIndex !== -1;
           const isUnreadMessage = message.receiverId === authUser._id && !message.isRead;
-          
-          // Track unread messages for intersection observer
-          if (isUnreadMessage) {
-            unreadMessagesRef.current.add(message._id);
-          }
           
           return (
             <div key={message._id}>
               {isFirstUnreadMessage && (
                 <div 
                   ref={unreadSeparatorRef}
-                  onClick={() => {
-                    markMessagesAsRead(selectedUser._id);
-                    unreadMessagesRef.current.clear();
-                  }}
+                  onClick={() => markMessagesAsRead(selectedUser._id)}
                 >
                   <UnreadMessagesSeparator />
                 </div>
@@ -140,7 +114,6 @@ const ChatContainer = () => {
                 ref={(el) => {
                   if (index === messages.length - 1) messageEndRef.current = el;
                   if (isUnreadMessage && el && observerRef.current) {
-                    el.dataset.messageId = message._id;
                     observerRef.current.observe(el);
                   }
                 }}
