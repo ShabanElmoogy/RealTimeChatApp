@@ -28,13 +28,13 @@ const ChatContainer = () => {
   const unreadSeparatorRef = useRef(null);
   const observerRef = useRef(null);
 
-  // Mark messages as read when they come into view
+  // Mark messages as read when separator comes into view
   const handleIntersection = useCallback((entries) => {
-    const visibleUnreadMessages = entries.filter(entry => entry.isIntersecting);
-
-    if (visibleUnreadMessages.length > 0) {
-      markMessagesAsRead(selectedUser._id);
-    }
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.target.classList.contains('unread-separator')) {
+        markMessagesAsRead(selectedUser._id);
+      }
+    });
   }, [selectedUser._id, markMessagesAsRead]);
 
   useEffect(() => {
@@ -43,14 +43,14 @@ const ChatContainer = () => {
     return () => unsubscribeFromMessages();
   }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
-  // Set up intersection observer for unread messages
+  // Set up intersection observer for separator
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
 
     observerRef.current = new IntersectionObserver(handleIntersection, {
-      threshold: 0.5,
+      threshold: 0.1,
       rootMargin: '0px'
     });
 
@@ -61,19 +61,29 @@ const ChatContainer = () => {
     };
   }, [handleIntersection]);
 
+  // Scroll to separator when messages load
   useEffect(() => {
-    if (messages.length > 0) {
-      const firstUnreadIndex = getFirstUnreadMessageIndex();
-      
-      if (firstUnreadIndex !== -1 && unreadSeparatorRef.current) {
-        setTimeout(() => {
-          unreadSeparatorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 100);
-      } else if (messageEndRef.current) {
-        messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (messages.length === 0) return;
+    
+    const firstUnreadIndex = getFirstUnreadMessageIndex();
+    
+    // Always scroll to bottom first, then to separator if needed
+    setTimeout(() => {
+      if (firstUnreadIndex !== -1) {
+        // Has unread messages - find and scroll to separator
+        const separatorElement = document.querySelector('.unread-separator');
+        if (separatorElement) {
+          separatorElement.scrollIntoView({ behavior: "auto", block: "center" });
+          return;
+        }
       }
-    }
-  }, [messages, getFirstUnreadMessageIndex]);
+      
+      // No unread messages or separator not found - scroll to bottom
+      if (messageEndRef.current) {
+        messageEndRef.current.scrollIntoView({ behavior: "auto" });
+      }
+    }, 100);
+  }, [messages.length, selectedUser._id]); // Only depend on messages length and user change
 
   if (isMessagesLoading) {
     return (
@@ -103,7 +113,13 @@ const ChatContainer = () => {
             <div key={message._id}>
               {isFirstUnreadMessage && (
                 <div 
-                  ref={unreadSeparatorRef}
+                  ref={(el) => {
+                    unreadSeparatorRef.current = el;
+                    if (el && observerRef.current) {
+                      el.classList.add('unread-separator');
+                      observerRef.current.observe(el);
+                    }
+                  }}
                   onClick={() => markMessagesAsRead(selectedUser._id)}
                 >
                   <UnreadMessagesSeparator />
@@ -113,9 +129,6 @@ const ChatContainer = () => {
                 className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
                 ref={(el) => {
                   if (index === messages.length - 1) messageEndRef.current = el;
-                  if (isUnreadMessage && el && observerRef.current) {
-                    observerRef.current.observe(el);
-                  }
                 }}
               >
                 <div className="chat-image avatar">
